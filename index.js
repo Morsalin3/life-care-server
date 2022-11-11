@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { query } = require('express');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000 ;
@@ -16,9 +17,17 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const serviceCollection = client.db('lifeCare').collection('services');
+        const reviewCollection = client.db('lifeCare').collection('reviews');
 
-        // get services
+        // get services with limit
         app.get('/services', async(req, res)=>{
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.limit(3).toArray();
+            res.send(services);
+        });
+        // get all service
+        app.get('/allservices', async(req, res)=>{
             const query = {};
             const cursor = serviceCollection.find(query);
             const services = await cursor.toArray();
@@ -27,16 +36,51 @@ async function run(){
         //get a serviec details
         app.get('/details/:id', async(req, res)=>{
             const id = req.params.id;
-            console.log(id)
+            // console.log(id)
             const query = {_id: ObjectId(id)};
             const details = await serviceCollection.findOne(query);
             res.send(details)
         });
         // post a service on database
-        app.post('/service', async(req, res)=>{
+        app.post('/services', async(req, res)=>{
             const service = req.body;
             const result = await serviceCollection.insertOne(service);
             res.send(result);
+        })
+        // post reviews
+        app.post('/reviews', async(req, res)=>{
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review);
+            res.send(result);
+        })
+        // my reviews
+        app.get('/reviews', async(req, res)=>{
+            console.log(req.query.email)
+            let query = {};
+
+            if(req.query.email){
+                query={
+                    email: req.query.email
+                } 
+            }
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews)
+        })
+        
+        // querry reviews
+        app.get('/reviews', async(req, res)=>{
+            console.log(req.query.service_id)
+            let query = {};
+
+            if(req.query.service_id){
+                query={
+                    service_id: req.query.service_id
+                } 
+            }
+            const cursor = reviewCollection.find(query);
+            const reviews = await cursor.toArray();
+            res.send(reviews)
         })
 
         
