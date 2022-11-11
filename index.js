@@ -54,7 +54,7 @@ async function run(){
             res.send(result);
         })
         // my reviews
-        app.get('/reviews', async(req, res)=>{
+        app.get('/review', async(req, res)=>{
             console.log(req.query.email)
             let query = {};
 
